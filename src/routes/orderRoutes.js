@@ -1,6 +1,6 @@
 import express from "express";
 import { createOrder, paystackWebhook } from "../controllers/orderController.js";
-import { protect } from "../middlewares/authMiddlewares.js";
+import { adminOnly, protect } from "../middlewares/authMiddlewares.js";
 import { initializePayment, verifyPayment, getMyOrders } from "../controllers/orderController.js";
 
 

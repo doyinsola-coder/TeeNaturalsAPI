@@ -2,6 +2,7 @@ import Order from "../models/Order.js";
 import axios from "axios";
 import sendEmail from "../utils/sendEmail.js";
 import crypto from "crypto";
+import { baseTemplate } from "../utils/emailTemplate.js";
 
 export const createOrder = async (req, res) => {
   try {
@@ -165,7 +166,10 @@ export const paystackWebhook = async (req, res) => {
         await sendEmail(
           order.user.email,
           "Payment Successful",
-          "Your payment has been confirmed."
+          baseTemplate(
+            "Payment Confirmed",
+            "Your payment has been confirmed."
+          )
         );
       } catch (err) {
         console.log("Email failed:", err.message);
