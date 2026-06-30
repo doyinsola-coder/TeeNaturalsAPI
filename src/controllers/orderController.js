@@ -183,3 +183,19 @@ export const paystackWebhook = async (req, res) => {
     res.sendStatus(500);
   }
 };
+
+export const deleteOrder = async (req, res) => {
+  try {
+    const order = await Order.findById(req.params.id); 
+    if (!order) {
+      return res.status(404).json({ message: "Order not found" });
+    }
+    if(order.isPaid){
+      return res.status(400).json({ message: "Cannot delete a paid order" });
+    }
+    await Order.findByIdAndDelete(req.params.id);
+    res.json({ message: "Order deleted" });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
