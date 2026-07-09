@@ -1,6 +1,6 @@
 import Order from "../models/Order.js";
 import axios from "axios";
-import sendEmail from "../utils/sendEmail.js";
+// import sendEmail from "../utils/sendEmail.js";
 import crypto from "crypto";
 import { baseTemplate } from "../utils/emailTemplate.js";
 
@@ -29,15 +29,15 @@ export const createOrder = async (req, res) => {
     });
 
     // Optional: Send initial processing email
-    try {
-      await sendEmail(
-        req.user.email,
-        "Order Created",
-        baseTemplate("Order Confirmed", "Your order has been successfully placed. Proceed to payment.")
-      );
-    } catch (e) {
-      console.error("Order creation email failed to send:", e.message);
-    }
+    // try {
+    //   await sendEmail(
+    //     req.user.email,
+    //     "Order Created",
+    //     baseTemplate("Order Confirmed", "Your order has been successfully placed. Proceed to payment.")
+    //   );
+    // } catch (e) {
+    //   console.error("Order creation email failed to send:", e.message);
+    // }
 
     return res.status(201).json(order);
   } catch (error) {
@@ -113,15 +113,15 @@ export const verifyPayment = async (req, res) => {
         };
         await order.save();
 
-        try {
-          await sendEmail(
-            order.user.email,
-            "Payment Successful",
-            baseTemplate("Payment Confirmed", "Your payment has been received successfully.")
-          );
-        } catch (emErr) {
-          console.error("Verification email failed:", emErr.message);
-        }
+        // try {
+        //   await sendEmail(
+        //     order.user.email,
+        //     "Payment Successful",
+        //     baseTemplate("Payment Confirmed", "Your payment has been received successfully.")
+        //   );
+        // } catch (emErr) {
+        //   console.error("Verification email failed:", emErr.message);
+        // }
       }
 
       return res.json({ message: "Payment verified and order updated", order });
@@ -183,11 +183,11 @@ export const paystackWebhook = async (req, res) => {
       console.log(`✅ Order ${order._id} successfully marked as PAID via Webhook.`);
 
       try {
-        await sendEmail(
-          order.user.email,
-          "Payment Successful",
-          baseTemplate("Payment Confirmed", "Your payment has been confirmed.")
-        );
+        // await sendEmail(
+        //   order.user.email,
+        //   "Payment Successful",
+        //   baseTemplate("Payment Confirmed", "Your payment has been confirmed.")
+        // );
       } catch (err) {
         console.error("Email failed:", err.message);
       }
