@@ -1,16 +1,14 @@
 import { configDotenv } from "dotenv";
 import express from "express";
 import cors from "cors";
-import helmet from "helmet"; // If using, ensure it doesn't conflict
+import orderRoutes from "./routes/orderRoutes.js";
 import authRoutes from "./routes/authRoutes.js";
 import productRoutes from "./routes/productRoutes.js";
-import orderRoutes from "./routes/orderRoutes.js";
 import adminRoutes from "./routes/adminRoutes.js";
 import setupMiddlewares from "./middlewares/main.js";
 
 const app = express();
 configDotenv();
-
 
 app.use(
   cors({
@@ -22,15 +20,12 @@ app.use(
 );
 
 
-app.use("/api/orders/webhook", express.raw({ type: "*/*" }));
-
-
 setupMiddlewares(app);
 
-// 4. Standard Routes
+// Standard Routes
 app.use("/api/auth", authRoutes);
+app.use("/api/orders", orderRoutes); // Handled inside orderRoutes
 app.use("/api/products", productRoutes);
-app.use("/api/orders", orderRoutes);
 app.use("/api/admin", adminRoutes);
 
 app.get("/", (req, res) => {
