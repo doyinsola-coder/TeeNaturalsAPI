@@ -2,7 +2,7 @@ import express from "express";
 import { protect } from "../middlewares/authMiddlewares.js";
 import { 
   createOrder, 
-  paystackWebhook, 
+  // paystackWebhook, 
   deleteOrder, 
   initializePayment, 
   verifyPayment, 
@@ -12,7 +12,7 @@ import {
 const router = express.Router();
 
 // CRITICAL: The webhook endpoint MUST receive raw data to verify the cryptographic signature
-router.post("/webhook", express.raw({ type: "application/json" }), paystackWebhook);
+// router.post("/webhook", express.raw({ type: "application/json" }), paystackWebhook);
 
 // Protected shopping paths
 router.post("/", protect, createOrder);
