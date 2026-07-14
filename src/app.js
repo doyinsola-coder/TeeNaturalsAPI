@@ -13,7 +13,7 @@ configDotenv();
 
 app.use(
   cors({
-    origin: ["http://localhost:5173", "https://tee-naturals-three.vercel.app"],
+    origin: ["http://localhost:5173", "https://tee-naturals-three.vercel.app", "https://tee-naturals.vercel.app"],
     credentials: true,
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"],
