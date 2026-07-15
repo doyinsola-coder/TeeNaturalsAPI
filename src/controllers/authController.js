@@ -29,14 +29,14 @@ export const registerUser = async (req, res) => {
       password: hashedPassword,
     });
 
-   await sendEmail(
-  user.email,
-  "Welcome to Tee Naturals 🌿",
-  baseTemplate(
-    "Welcome!",
-    `Hi ${user.name}, your account has been created successfully.`
-  )
-);
+//    await sendEmail(
+//   user.email,
+//   "Welcome to Tee Naturals 🌿",
+//   baseTemplate(
+//     "Welcome!",
+//     `Hi ${user.name}, your account has been created successfully.`
+//   )
+// );
 
     res.status(201).json({
       _id: user._id,
