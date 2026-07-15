@@ -106,6 +106,7 @@ export const verifyPayment = async (req, res) => {
       if (!order.isPaid) {
         order.isPaid = true;
         order.paidAt = Date.now();
+        order.status = "processing"; // 🚀 FIX: Update order status to processing
         order.paymentResult = {
           id: data.id,
           status: data.status,
@@ -173,6 +174,7 @@ export const paystackWebhook = async (req, res) => {
 
       order.isPaid = true;
       order.paidAt = Date.now();
+      order.status = "processing";
       order.paymentResult = {
         id: data.id,
         status: data.status,
