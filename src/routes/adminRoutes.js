@@ -11,8 +11,12 @@ const router = express.Router();
 
 // Get all users
 router.get("/users", protect, adminOnly, async (req, res) => {
-  const users = await User.find().select("-password");
-  res.json(users);
+  try {
+    const users = await User.find().select("-password");
+    res.json(users);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
 });
 
 
@@ -20,25 +24,33 @@ router.get("/users", protect, adminOnly, async (req, res) => {
 
 // Update product
 router.put("/products/:id", protect, adminOnly, async (req, res) => {
-  const product = await Product.findById(req.params.id);
+  try {
+    const product = await Product.findById(req.params.id);
 
-  if (!product) {
-    return res.status(404).json({ message: "Product not found" });
+    if (!product) {
+      return res.status(404).json({ message: "Product not found" });
+    }
+
+    const updated = await Product.findByIdAndUpdate(
+      req.params.id,
+      req.body,
+      { new: true, runValidators: true }
+    );
+
+    res.json(updated);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
   }
-
-  const updated = await Product.findByIdAndUpdate(
-    req.params.id,
-    req.body,
-    { new: true }
-  );
-
-  res.json(updated);
 });
 
 // Delete product
 router.delete("/products/:id", protect, adminOnly, async (req, res) => {
-  await Product.findByIdAndDelete(req.params.id);
-  res.json({ message: "Product deleted" });
+  try {
+    await Product.findByIdAndDelete(req.params.id);
+    res.json({ message: "Product deleted" });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
 });
 
 
@@ -46,22 +58,49 @@ router.delete("/products/:id", protect, adminOnly, async (req, res) => {
 
 // Get all orders
 router.get("/orders", protect, adminOnly, async (req, res) => {
-  const orders = await Order.find().populate("user", "name email");
-  res.json(orders);
+  try {
+    
+    const orders = await Order.find().populate("user", "name email");
+    res.json(orders);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
 });
 
 // Update order status
 router.put("/orders/:id", protect, adminOnly, async (req, res) => {
-  const order = await Order.findById(req.params.id);
+  try {
+    const order = await Order.findById(req.params.id);
 
-  if (!order) {
-    return res.status(404).json({ message: "Order not found" });
+    if (!order) {
+      return res.status(404).json({ message: "Order not found" });
+    }
+
+    // The schema's status enum is lowercase; the admin UI sends
+    // "Processing" / "Shipped" / "Delivered" / "Cancelled", so normalize
+    // before validating/saving to avoid a ValidationError crash.
+    if (req.body.status) {
+      const normalized = String(req.body.status).toLowerCase();
+      const allowed = ["pending", "processing", "shipped", "delivered", "cancelled"];
+      if (!allowed.includes(normalized)) {
+        return res.status(400).json({ message: `Invalid status: ${req.body.status}` });
+      }
+      order.status = normalized;
+    }
+
+    if (typeof req.body.isDelivered === "boolean") {
+      order.isDelivered = req.body.isDelivered;
+      order.deliveredAt = req.body.isDelivered
+        ? (req.body.deliveredAt ? new Date(req.body.deliveredAt) : new Date())
+        : undefined;
+    }
+
+    await order.save();
+
+    res.json(order);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
   }
-
-  order.status = req.body.status || order.status;
-  await order.save();
-
-  res.json(order);
 });
 
 export default router;

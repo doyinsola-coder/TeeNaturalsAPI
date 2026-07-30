@@ -39,10 +39,16 @@ const orderSchema = new mongoose.Schema(
       email: String,
     },
     status: {
-  type: String,
-  enum: ["pending", "processing", "shipped", "delivered"],
-  default: "pending",
-},
+      type: String,
+      enum: ["pending", "processing", "shipped", "delivered", "cancelled"],
+      default: "pending",
+    },
+
+    isDelivered: {
+      type: Boolean,
+      default: false,
+    },
+    deliveredAt: Date,
   },
   { timestamps: true }
 );
