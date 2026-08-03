@@ -6,7 +6,8 @@ import {
   deleteOrder, 
   initializePayment, 
   verifyPayment, 
-  getMyOrders 
+  getMyOrders,
+  markOrderReceived, 
 } from "../controllers/orderController.js";
 
 const router = express.Router();
@@ -19,6 +20,7 @@ router.post("/", protect, createOrder);
 router.post("/pay", protect, initializePayment);
 router.get("/verify/:reference", verifyPayment);
 router.get("/my", protect, getMyOrders);
+router.put("/:id/received", protect, markOrderReceived);
 router.delete("/:id", protect, deleteOrder);
 
 export default router;

@@ -246,6 +246,35 @@ export const getMyOrders = async (req, res) => {
   }
 };
 
+// 5b. Customer confirms they've received their order
+export const markOrderReceived = async (req, res) => {
+  try {
+    const order = await Order.findById(req.params.id);
+
+    if (!order) {
+      return res.status(404).json({ message: "Order not found" });
+    }
+    if (order.user.toString() !== req.user._id.toString()) {
+      return res.status(403).json({ message: "Not authorized" });
+    }
+    if (!order.isPaid) {
+      return res.status(400).json({ message: "This order hasn't been paid for yet" });
+    }
+    if (order.isDelivered) {
+      return res.status(400).json({ message: "Order already marked as received" });
+    }
+
+    order.isDelivered = true;
+    order.deliveredAt = Date.now();
+    order.status = "delivered";
+    await order.save();
+
+    return res.json(order);
+  } catch (error) {
+    return res.status(500).json({ message: error.message });
+  }
+};
+
 // 6. Delete unpaid record
 export const deleteOrder = async (req, res) => {
   try {
