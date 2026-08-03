@@ -19,6 +19,57 @@ router.get("/users", protect, adminOnly, async (req, res) => {
   }
 });
 
+// Suspend a user — blocks their access site-wide (enforced in the protect middleware)
+router.put("/users/:id/suspend", protect, adminOnly, async (req, res) => {
+  try {
+    if (req.params.id === req.user._id.toString()) {
+      return res.status(400).json({ message: "You cannot suspend your own account" });
+    }
+    const user = await User.findById(req.params.id);
+    if (!user) return res.status(404).json({ message: "User not found" });
+
+    user.isSuspended = true;
+    user.suspendedAt = new Date();
+    await user.save();
+
+    res.json({ message: "User suspended", user: { ...user.toObject(), password: undefined } });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+// Unsuspend a user
+router.put("/users/:id/unsuspend", protect, adminOnly, async (req, res) => {
+  try {
+    const user = await User.findById(req.params.id);
+    if (!user) return res.status(404).json({ message: "User not found" });
+
+    user.isSuspended = false;
+    user.suspendedAt = undefined;
+    await user.save();
+
+    res.json({ message: "User unsuspended", user: { ...user.toObject(), password: undefined } });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+// Permanently delete a user account
+router.delete("/users/:id", protect, adminOnly, async (req, res) => {
+  try {
+    if (req.params.id === req.user._id.toString()) {
+      return res.status(400).json({ message: "You cannot delete your own account" });
+    }
+    const user = await User.findById(req.params.id);
+    if (!user) return res.status(404).json({ message: "User not found" });
+
+    await User.findByIdAndDelete(req.params.id);
+    res.json({ message: "User deleted" });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
 
 // ====================== PRODUCTS ======================
 
@@ -59,7 +110,6 @@ router.delete("/products/:id", protect, adminOnly, async (req, res) => {
 // Get all orders
 router.get("/orders", protect, adminOnly, async (req, res) => {
   try {
-    
     const orders = await Order.find().populate("user", "name email");
     res.json(orders);
   } catch (error) {
