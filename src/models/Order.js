@@ -49,6 +49,14 @@ const orderSchema = new mongoose.Schema(
       default: false,
     },
     deliveredAt: Date,
+
+    shippingAddress: {
+      fullName: String,
+      phone:    String,
+      address:  String,
+      city:     String,
+      state:    String,
+    },
   },
   { timestamps: true }
 );

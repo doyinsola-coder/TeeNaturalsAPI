@@ -1,16 +1,27 @@
 import Order from "../models/Order.js";
 import axios from "axios";
-// import sendEmail from "../utils/sendEmail.js";
+import sendEmail from "../utils/sendEmail.js";
 import crypto from "crypto";
 import { baseTemplate } from "../utils/emailTemplate.js";
 
 // 1. Create standard unpaid order
 export const createOrder = async (req, res) => {
   try {
-    const { orderItems, totalPrice } = req.body;
+    const { orderItems, totalPrice, shippingAddress } = req.body;
 
     if (!orderItems || orderItems.length === 0) {
       return res.status(400).json({ message: "No order items" });
+    }
+
+    if (
+      !shippingAddress ||
+      !shippingAddress.fullName ||
+      !shippingAddress.phone ||
+      !shippingAddress.address ||
+      !shippingAddress.city ||
+      !shippingAddress.state
+    ) {
+      return res.status(400).json({ message: "Complete shipping address is required" });
     }
 
     // Map your items safely to match schema attributes
@@ -26,18 +37,29 @@ export const createOrder = async (req, res) => {
       user: req.user._id,
       orderItems: configuredItems,
       totalPrice,
+      shippingAddress,
     });
 
-    // Optional: Send initial processing email
-    // try {
-    //   await sendEmail(
-    //     req.user.email,
-    //     "Order Created",
-    //     baseTemplate("Order Confirmed", "Your order has been successfully placed. Proceed to payment.")
-    //   );
-    // } catch (e) {
-    //   console.error("Order creation email failed to send:", e.message);
-    // }
+    // Order-created confirmation email (best-effort — never blocks the response)
+    try {
+      const itemsList = configuredItems
+        .map(i => `${i.qty} x ${i.name}`)
+        .join("<br/>");
+      await sendEmail(
+        req.user.email,
+        "Order Received — Tee Naturals",
+        baseTemplate(
+          "Order Confirmed",
+          `Hi ${req.user.name || "there"}, thanks for your order!<br/><br/>
+           <strong>Order ID:</strong> ${order._id}<br/>
+           <strong>Items:</strong><br/>${itemsList}<br/>
+           <strong>Total:</strong> ₦${Number(totalPrice).toLocaleString()}<br/><br/>
+           Please proceed to payment to complete your order.`
+        )
+      );
+    } catch (e) {
+      console.error("Order creation email failed to send:", e.message);
+    }
 
     return res.status(201).json(order);
   } catch (error) {
@@ -114,15 +136,21 @@ export const verifyPayment = async (req, res) => {
         };
         await order.save();
 
-        // try {
-        //   await sendEmail(
-        //     order.user.email,
-        //     "Payment Successful",
-        //     baseTemplate("Payment Confirmed", "Your payment has been received successfully.")
-        //   );
-        // } catch (emErr) {
-        //   console.error("Verification email failed:", emErr.message);
-        // }
+        try {
+          await sendEmail(
+            order.user.email,
+            "Payment Successful — Tee Naturals",
+            baseTemplate(
+              "Payment Confirmed",
+              `Hi ${order.user.name || "there"}, we've received your payment.<br/><br/>
+               <strong>Order ID:</strong> ${order._id}<br/>
+               <strong>Total Paid:</strong> ₦${Number(order.totalPrice).toLocaleString()}<br/><br/>
+               We're now processing your order and will notify you when it ships.`
+            )
+          );
+        } catch (emErr) {
+          console.error("Verification email failed:", emErr.message);
+        }
       }
 
       return res.json({ message: "Payment verified and order updated", order });
@@ -185,11 +213,17 @@ export const paystackWebhook = async (req, res) => {
       console.log(`✅ Order ${order._id} successfully marked as PAID via Webhook.`);
 
       try {
-        // await sendEmail(
-        //   order.user.email,
-        //   "Payment Successful",
-        //   baseTemplate("Payment Confirmed", "Your payment has been confirmed.")
-        // );
+        await sendEmail(
+          order.user.email,
+          "Payment Successful — Tee Naturals",
+          baseTemplate(
+            "Payment Confirmed",
+            `Hi ${order.user.name || "there"}, we've received your payment.<br/><br/>
+             <strong>Order ID:</strong> ${order._id}<br/>
+             <strong>Total Paid:</strong> ₦${Number(order.totalPrice).toLocaleString()}<br/><br/>
+             We're now processing your order and will notify you when it ships.`
+          )
+        );
       } catch (err) {
         console.error("Email failed:", err.message);
       }
