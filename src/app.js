@@ -7,6 +7,7 @@ import orderRoutes from "./routes/orderRoutes.js";
 import adminRoutes from "./routes/adminRoutes.js";
 import setupMiddlewares from "./middlewares/main.js";
 import { paystackWebhook } from "./controllers/orderController.js"; // Import directly here
+import reviewRoutes from "./routes/reviewRoutes.js";
 
 const app = express();
 configDotenv();
@@ -33,6 +34,7 @@ app.post(
 setupMiddlewares(app);
 
 // Standard Operational Routes
+app.use("/api/reviews", reviewRoutes);
 app.use("/api/auth", authRoutes);
 app.use("/api/products", productRoutes);
 app.use("/api/orders", orderRoutes); // Make sure router.post("/webhook") is removed inside orderRoutes.js!
