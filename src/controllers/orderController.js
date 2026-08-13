@@ -81,6 +81,7 @@ export const initializePayment = async (req, res) => {
       {
         email,
         amount: Math.round(amount * 100), // Converted to kobo securely
+        callback_url: `${process.env.FRONTEND_URL}/dashboard`,
         metadata: {
           orderId: orderId.toString(), // Force cast to string for schema compatibility
         },
@@ -118,6 +119,10 @@ export const verifyPayment = async (req, res) => {
     const data = response.data.data;
 
     if (data.status === "success") {
+      if (!data.metadata || !data.metadata.orderId) {
+        return res.status(400).json({ message: "Payment verified but order reference was missing." });
+      }
+
       const order = await Order.findById(data.metadata.orderId).populate("user");
 
       if (!order) {
